@@ -89,7 +89,7 @@ if __name__ == '__main__':
         for i in range(1, n):
             newdiff = frequency.find_diff(model_table, frequency.find_frequencies(Cipher_Aidar.caesar(instr, i)))
             if newdiff < bestdiff:
-                diff = newdiff
+                bestdiff = newdiff
                 ans = i
 
         if namespace.output_file:
