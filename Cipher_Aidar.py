@@ -25,8 +25,3 @@ def vigenere(instr, keystr='', rev=0):
     for i, x in enumerate(instr):
         ans += next_sym(x, (1 - 2 * rev) * klist[i % n])
     return ans
-
-
-if __name__ == "__main__":
-    print(caesar('privet, ya sosu hui', -77))
-    print(vigenere('PriVet, yA DolBoeB', 'SeX'))
