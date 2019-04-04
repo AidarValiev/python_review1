@@ -1,22 +1,26 @@
 import frequency
 import argparse
-import Cipher_Aidar
+from my_ciphers import ciphers
 
 
 def read_file(path):
-    result = ''
-    with open(path, 'r') as file:
-        for line in file:
-            result += line
-    return result
+    ans = ''
+    if path:
+        with open(path, 'r') as file:
+            for line in file:
+                ans += line
+    else:
+        ans = input()
+    return ans
 
 
 def write_file(path, message):
-    with open(path, 'w') as file:
-        file.write(message)
+    if path:
+        with open(path, 'w') as file:
+            file.write(message)
+    else:
+        print(message)
 
-
-ciphers = {'caesar': Cipher_Aidar.caesar, 'vigenere': Cipher_Aidar.vigenere}
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -41,28 +45,17 @@ if __name__ == '__main__':
 
     train_parser.add_argument('-t', '--text-file')
     train_parser.add_argument('-m', '--model-file', required=True)
-
-    namespace = parser.parse_args()
+    namespace = parser.parse_args(input().split(' '))
 
     if namespace.command in ['encode', 'decode']:
-        if namespace.cipher not in ciphers:
+        if namespace.cipher not in ciphers():
             raise ValueError("Cipher is not supported")
         rev = 0
         if namespace.command == 'decode':
             rev = 1
-        ans = ''
-        instr = ''
-        if namespace.input_file:
-            instr = read_file(namespace.input_file)
-        else:
-            instr = input()
-
-        ans = ciphers[namespace.cipher](instr, namespace.key, rev)
-
-        if namespace.output_file:
-            write_file(namespace.output_file, ans)
-        else:
-            print(ans)
+        instr = read_file(namespace.input_file)
+        ans = ciphers()[namespace.cipher](instr, namespace.key, rev)
+        write_file(namespace.output_file, ans)
 
     elif namespace.command == 'train':
         instr = ''
@@ -73,28 +66,20 @@ if __name__ == '__main__':
         a = frequency.find_frequencies(instr)
         with open(namespace.model_file, 'w') as file:
             for char in a:
-                file.write(char + ' ' + str(a[char]) + '\n')
+                file.write(char + ' ' + str(a.get(char, 0)) + '\n')
 
     elif namespace.command == 'hack':
-        instr = ''
+        instr = read_file(namespace.input_file)
         ans = 0
-        if namespace.input_file:
-            instr = read_file(namespace.input_file)
-        else:
-            instr = input()
-
         model_table = frequency.getfr(namespace.model_file)
         n = len(model_table)
-        bestdiff = frequency.find_diff(model_table, frequency.find_frequencies(Cipher_Aidar.caesar(instr, 0)))
+        bestdiff = frequency.find_diff(model_table, frequency.find_frequencies(ciphers()['caesar'](instr, 0)))
         for i in range(1, n):
-            newdiff = frequency.find_diff(model_table, frequency.find_frequencies(Cipher_Aidar.caesar(instr, i)))
+            newdiff = frequency.find_diff(model_table, frequency.find_frequencies(ciphers()['caesar'](instr, i)))
             if newdiff < bestdiff:
                 bestdiff = newdiff
                 ans = i
+        write_file(namespace.output_file, ciphers()['caesar'](instr, ans))
 
-        if namespace.output_file:
-            write_file(namespace.output_file, Cipher_Aidar.caesar(instr, ans))
-        else:
-            print(Cipher_Aidar.caesar(instr, ans))
     else:
         raise ValueError("incorrect command")

@@ -1,36 +1,34 @@
 from collections import Counter
+import string
+
+
+def encrypted_symbols():
+    return string.ascii_lowercase
 
 
 def find_frequencies(message):
-    encrypted_symbols = 'abcdefghijklmnopqrstuvwxyz'
-    counts = Counter()
-    totalcount = 0
-    for char in encrypted_symbols:
-        counts[char] = 0
-    for char in message:
-        if char.lower() in encrypted_symbols:
-            counts[char.lower()] += 1
-            totalcount += 1
-    for pair in counts:
-        counts[pair] /= totalcount
+    counts = Counter(message.lower())
+    for sym in counts:
+        if sym not in encrypted_symbols():
+            counts[sym] = 0
+    counts += Counter()
+    total_count = sum(counts.values())
+    for sym in counts:
+        counts[sym] /= total_count
     return counts
 
 
 def getfr(path):
-    encrypted_symbols = 'abcdefghijklmnopqrstuvwxyz'
     counts = Counter()
-    for char in encrypted_symbols:
-        counts[char] = 0
     with open(path, 'r') as file:
         for line in file:
-            char, count = [x for x in line.split(' ')]
+            char, count = line.split(' ')
             counts[char] = float(count)
     return counts
 
 
 def find_diff(trained, counts):
-    encrypted_symbols = 'abcdefghijklmnopqrstuvwxyz'
     diff = 0
-    for char in encrypted_symbols:
-        diff += (trained[char] - counts[char]) ** 2
+    for char in encrypted_symbols():
+        diff += (trained.get(char, 0) - counts.get(char, 0)) ** 2
     return float(diff)
