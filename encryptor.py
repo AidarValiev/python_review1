@@ -1,8 +1,9 @@
-import frequency
 import argparse
-from my_ciphers import ciphers
+from my_ciphers import Ciphers, caesar
+from frequency import get_frequencies, find_frequencies, best_diff, encrypted_symbols
 
 
+# reads text from file or, if path is None, from input()
 def read_file(path):
     ans = ''
     if path:
@@ -14,6 +15,7 @@ def read_file(path):
     return ans
 
 
+# write text to file or, if path is None, to output()
 def write_file(path, message):
     if path:
         with open(path, 'w') as file:
@@ -22,7 +24,8 @@ def write_file(path, message):
         print(message)
 
 
-if __name__ == '__main__':
+# parses arguments
+def argument_parse():
     parser = argparse.ArgumentParser()
     subs = parser.add_subparsers(dest='command')
     encode_parser = subs.add_parser('encode')
@@ -33,53 +36,52 @@ if __name__ == '__main__':
     encode_parser.add_argument('-k', '--key', required=True)
     encode_parser.add_argument('-i', '--input-file')
     encode_parser.add_argument('-o', '--output-file')
-
     decode_parser.add_argument('-c', '--cipher', type=str, required=True)
     decode_parser.add_argument('-k', '--key', required=True)
     decode_parser.add_argument('-i', '--input-file')
     decode_parser.add_argument('-o', '--output-file')
-
     hack_parser.add_argument('-i', '--input-file')
     hack_parser.add_argument('-o', '--output-file')
     hack_parser.add_argument('-m', '--model-file', required=True)
-
     train_parser.add_argument('-t', '--text-file')
     train_parser.add_argument('-m', '--model-file', required=True)
     namespace = parser.parse_args(input().split(' '))
+    return namespace
 
-    if namespace.command in ['encode', 'decode']:
-        if namespace.cipher not in ciphers():
-            raise ValueError("Cipher is not supported")
-        rev = 0
-        if namespace.command == 'decode':
-            rev = 1
-        instr = read_file(namespace.input_file)
-        ans = ciphers()[namespace.cipher](instr, namespace.key, rev)
-        write_file(namespace.output_file, ans)
 
-    elif namespace.command == 'train':
-        instr = ''
-        if namespace.text_file:
-            instr = read_file(namespace.text_file)
-        else:
-            instr = input()
-        a = frequency.find_frequencies(instr)
-        with open(namespace.model_file, 'w') as file:
-            for char in a:
-                file.write(char + ' ' + str(a.get(char, 0)) + '\n')
+# encodes the message with the selected cipher
+def encode(namespc):
+    instr = read_file(namespc.input_file)
+    write_file(namespc.output_file, Ciphers()[namespc.cipher](instr, namespc.key))
 
-    elif namespace.command == 'hack':
-        instr = read_file(namespace.input_file)
-        ans = 0
-        model_table = frequency.getfr(namespace.model_file)
-        n = len(model_table)
-        bestdiff = frequency.find_diff(model_table, frequency.find_frequencies(ciphers()['caesar'](instr, 0)))
-        for i in range(1, n):
-            newdiff = frequency.find_diff(model_table, frequency.find_frequencies(ciphers()['caesar'](instr, i)))
-            if newdiff < bestdiff:
-                bestdiff = newdiff
-                ans = i
-        write_file(namespace.output_file, ciphers()['caesar'](instr, ans))
 
-    else:
-        raise ValueError("incorrect command")
+# decodes the message with the selected cipher
+def decode(namespc):
+    instr = read_file(namespc.input_file)
+    write_file(namespc.output_file, Ciphers()[namespc.cipher](instr, namespc.key, reversed=True))
+
+
+# makes model of frequencies based on entered message
+def train(namespc):
+    model_table = find_frequencies(read_file(namespc.text_file))
+    message = ''
+    for char in model_table:
+        message += (char + ' ' + str(model_table.get(char, 0)) + '\n')
+    write_file(namespc.model_file, message)
+
+
+# decodes message, which was encrypted with caesar, with unknown key
+def hack(namespc):
+    instr = read_file(namespc.input_file)
+    model_table = get_frequencies(namespc.model_file)
+    write_file(namespc.output_file, caesar(instr, best_diff(model_table, find_frequencies(instr))))
+
+
+# dict of enabled commands
+def commands():
+    return {'encode': encode, 'decode': decode, 'train': train, 'hack': hack}
+
+
+if __name__ == '__main__':
+    namespace = argument_parse()
+    commands()[namespace.command](namespace)
