@@ -45,7 +45,7 @@ def argument_parse():
     hack_parser.add_argument('-m', '--model-file', required=True)
     train_parser.add_argument('-t', '--text-file')
     train_parser.add_argument('-m', '--model-file', required=True)
-    namespace = parser.parse_args(input().split(' '))
+    namespace = parser.parse_args()
     return namespace
 
 
