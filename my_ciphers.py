@@ -25,14 +25,5 @@ def vigenere(instr, keystr='', rev=False):
 
 
 # contains supported ciphers
-# throws exception if cipher is not supported
-class Ciphers:
-    supported_ciphers = {'caesar': caesar, 'vigenere': vigenere}
+ciphers = {'caesar': caesar, 'vigenere': vigenere}
 
-    def __init__(self):
-        pass
-
-    def __getitem__(self, item):
-        if item in self.supported_ciphers:
-            return self.supported_ciphers[item]
-        raise ValueError('unsupported cipher')

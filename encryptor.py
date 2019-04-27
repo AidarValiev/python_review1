@@ -1,15 +1,13 @@
 import argparse
-from my_ciphers import Ciphers, caesar
+from my_ciphers import ciphers, caesar
 from frequency import get_frequencies, find_frequencies, best_diff, encrypted_symbols
 
 
 # reads text from file or, if path is None, from input()
 def read_file(path):
-    ans = ''
     if path:
         with open(path, 'r') as file:
-            for line in file:
-                ans += line
+            ans = file.read()
     else:
         ans = input()
     return ans
@@ -45,20 +43,20 @@ def argument_parse():
     hack_parser.add_argument('-m', '--model-file', required=True)
     train_parser.add_argument('-t', '--text-file')
     train_parser.add_argument('-m', '--model-file', required=True)
-    namespace = parser.parse_args()
+    namespace = parser.parse_args(input().split(' '))
     return namespace
 
 
 # encodes the message with the selected cipher
 def encode(namespc):
     instr = read_file(namespc.input_file)
-    write_file(namespc.output_file, Ciphers()[namespc.cipher](instr, namespc.key))
+    write_file(namespc.output_file, ciphers[namespc.cipher](instr, namespc.key))
 
 
 # decodes the message with the selected cipher
 def decode(namespc):
     instr = read_file(namespc.input_file)
-    write_file(namespc.output_file, Ciphers()[namespc.cipher](instr, namespc.key, reversed=True))
+    write_file(namespc.output_file, ciphers[namespc.cipher](instr, namespc.key, reversed=True))
 
 
 # makes model of frequencies based on entered message
@@ -78,10 +76,9 @@ def hack(namespc):
 
 
 # dict of enabled commands
-def commands():
-    return {'encode': encode, 'decode': decode, 'train': train, 'hack': hack}
+commands = {'encode': encode, 'decode': decode, 'train': train, 'hack': hack}
 
 
 if __name__ == '__main__':
     namespace = argument_parse()
-    commands()[namespace.command](namespace)
+    commands[namespace.command](namespace)
